@@ -2,14 +2,13 @@
 which is responsible for generating dynamic images from video frames.
 """
 
-import glob
-import os
+from utils.image_utils import ImageManager
 from typing import Union
 
+import os
+import glob
 import cv2
 import numpy as np
-
-from utils.image_utils import ImageManager
 
 
 class DynamicImageGenerator:

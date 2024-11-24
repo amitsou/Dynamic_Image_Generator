@@ -9,15 +9,15 @@
     and then create the dynamic images.
 """
 
-import argparse
+from src.image_generators.dynamic_image_generator import DynamicImageGenerator
+from src.video_processing.video_processor import VideoProcessor
+from src.utils.execution_utils import ExecutionTimeHandler
+from src.utils.console_utils import ConsoleManager
+from src.utils.file_utils import FileManager
+
 import os
 import time
-
-from image_generators.dynamic_image_generator import DynamicImageGenerator
-from utils.console_utils import ConsoleManager
-from utils.execution_utils import ExecutionTimeHandler
-from utils.file_utils import FileManager
-from video_processing.video_processor import VideoProcessor
+import argparse
 
 
 def parse_args():
@@ -42,10 +42,7 @@ def parse_args():
 
 
 def process_datasets(input_dir: str, mode: str):
-    extensions = {
-        "get_frames": [".mp4", ".MP4"],
-        "get_dyn_img": [".jpg", ".JPG", ".png", ".PNG"],
-    }
+    extensions = {"get_frames": [".mp4", ".MP4"],"get_dyn_img": [".jpg", ".JPG", ".png", ".PNG"],}
 
     if "EPIC-KITCHENS" in input_dir:
         # TODO: Implementation for the EPIC-KITCHENS dataset
@@ -59,6 +56,7 @@ def process_datasets(input_dir: str, mode: str):
 
     elif "BON" in input_dir:
         subdirs = ["Barcelona", "Nairobi", "Oxford"]
+
     elif "Charades" in input_dir:
         """
         Due to the reason that RGB frames are provided in the CharadesEgo dataset there is no need for extracting them.
@@ -73,39 +71,15 @@ def process_datasets(input_dir: str, mode: str):
         videos = FileManager.get_videos(tmp_dir, extensions.get(mode, []))
 
         if mode == "get_dyn_img" and "BON" in tmp_dir:
-            output_dir = list(
-                map(
-                    lambda video: os.path.dirname(
-                        video.replace(
-                            "Datasets/Frames", "Datasets/Dynamic_Images"
-                        ).replace("/Frames", "")
-                    ),
-                    videos,
-                )
-            )
-        elif mode == "get_dyn_img" and "Charades" in tmp_dir:
-            output_dir = list(
-                map(
-                    lambda video: os.path.dirname(
-                        video.replace("Datasets", "Datasets/Dynamic_Images")
-                    ),
-                    videos,
-                )
-            )
-        elif mode == "get_frames":
-            output_dir = list(
-                map(
-                    lambda video: os.path.dirname(
-                        video.replace("Datasets", "Datasets/Frames")
-                    ),
-                    videos,
-                )
-            )
+            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets/Frames", "Datasets/Dynamic_Images").replace("/Frames", "")),videos,))
 
-        [
-            FileManager.create_multiple_dirs(directory)
-            for directory in sorted(list(set(output_dir)))
-        ]
+        elif mode == "get_dyn_img" and "Charades" in tmp_dir:
+            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets", "Datasets/Dynamic_Images")),videos,))
+
+        elif mode == "get_frames":
+            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets", "Datasets/Frames")),videos,))
+
+        [FileManager.create_multiple_dirs(directory) for directory in sorted(list(set(output_dir)))]
 
         functions = {
             "get_frames": VideoProcessor.extract_video_frames,
@@ -121,7 +95,7 @@ def main():
     if args.print:
         ConsoleManager.block_print()
 
-    process_datasets(str(args.input), str(args.mode))
+    process_datasets(str(args.input), str(args.mode)) # Business logic is here
     end_time = time.time()
     ExecutionTimeHandler.calculate_execution_time(start_time, end_time)
 

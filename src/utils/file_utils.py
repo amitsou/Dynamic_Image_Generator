@@ -70,7 +70,7 @@ class FileManager:
             os.makedirs(path)
 
     @staticmethod
-    def create_dir(directory: str) -> bool:
+    def create_dir(directory: str):
         """
         Creates a directory with the specified path.
         Args:

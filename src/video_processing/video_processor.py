@@ -1,12 +1,11 @@
 """This module contains the VideoProcessor class for video processing."""
 
-import datetime
-import os
 from typing import Tuple
-
-import cv2
-
 from utils.utils import create_multiple_dirs
+
+import os
+import cv2
+import datetime
 
 
 class VideoProcessor:
@@ -82,35 +81,3 @@ class VideoProcessor:
         seconds = round(frames / fps)
         video_time = datetime.timedelta(seconds=seconds)
         return video_time, seconds
-
-    @staticmethod
-    def play_video(video_path: str) -> None:
-        """
-        Plays a video from the specified file path.
-        Args:
-            video_path (str): The path to the video file to be played.
-        Returns:
-            None
-        Raises:
-            Prints an error message if the video file cannot be opened.
-        Notes:
-            - The function uses OpenCV to read and display the video frames.
-            - The video playback can be interrupted by pressing any key or closing the video window.
-        """
-        cap = cv2.VideoCapture(video_path)
-        if not cap.isOpened():
-            print("Error opening video file")
-            return
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if ret:
-                cv2.imshow("Frame", frame)
-                if (
-                    cv2.waitKey(25) != -1
-                    or cv2.getWindowProperty("Frame", cv2.WND_PROP_VISIBLE) < 1
-                ):
-                    break
-            else:
-                break
-        cap.release()
-        cv2.destroyAllWindows()
