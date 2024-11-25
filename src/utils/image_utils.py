@@ -10,9 +10,7 @@ class ImageManager:
     """Utility functions related to image manipulation."""
 
     @staticmethod
-    def get_dynamic_image(
-        self, frames: list[np.ndarray], normalized=True
-    ) -> np.ndarray:
+    def get_dynamic_image(frames: list[np.ndarray], normalized=True) -> np.ndarray:
         """
         Generate a dynamic image from a sequence of frames.
         A dynamic image is a single image that summarizes the motion information
@@ -25,9 +23,9 @@ class ImageManager:
             numpy.ndarray: The computed dynamic image.
         """
         num_channels = frames[0].shape[2]
-        channel_frames = self.get_channel_frames(frames, num_channels)
+        channel_frames = ImageManager.get_channel_frames(frames, num_channels)
         channel_dynamic_images = [
-            self.compute_dynamic_image(channel) for channel in channel_frames
+            ImageManager.compute_dynamic_image(channel) for channel in channel_frames
         ]
         dynamic_image = cv2.merge(tuple(channel_dynamic_images))
         if normalized:
@@ -38,9 +36,7 @@ class ImageManager:
         return dynamic_image
 
     @staticmethod
-    def get_channel_frames(
-        self, iter_frames: iter, num_channels: int
-    ) -> List[np.ndarray]:
+    def get_channel_frames(iter_frames: iter, num_channels: int) -> List[np.ndarray]:
         """
         Splits each frame in the iterable into its respective channels (for example RGB channels) and groups them.
         Args:
@@ -56,7 +52,7 @@ class ImageManager:
         return [np.array(channel_frames) for channel_frames in frames]
 
     @staticmethod
-    def compute_dynamic_image(self, frames: np.ndarray) -> np.ndarray:
+    def compute_dynamic_image(frames: np.ndarray) -> np.ndarray:
         """
         Compute a dynamic image from a sequence of frames.
         A dynamic image is a single image that summarizes the motion information

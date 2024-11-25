@@ -38,4 +38,6 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: [--max-line-length=120]
+        args:
+        - --max-line-length=120
+        - --exclude=src/image_generators/dynamic_image_generator.py

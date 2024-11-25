@@ -1,8 +1,29 @@
 """Contains utility classes for handling execution time."""
 
+import time
+
 
 class ExecutionTimeHandler:
     """Handles execution time calculation."""
+
+    @staticmethod
+    def timeit(method: callable) -> callable:
+        """
+        Decorator to calculate the execution time of a method.
+        Args:
+            method (function): The method to calculate the execution time of.
+        Returns:
+            function: The wrapper function.
+        """
+
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = method(*args, **kwargs)
+            end_time = time.time()
+            ExecutionTimeHandler.calculate_execution_time(start_time, end_time)
+            return result
+
+        return wrapper
 
     @staticmethod
     def calculate_execution_time(start_time: float, end_time: float) -> tuple:

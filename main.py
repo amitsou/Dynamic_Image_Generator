@@ -1,103 +1,123 @@
-""" Main script to run the video processing pipeline.
-    The modes of operation are:
-        - get_frames: Extract frames from videos.
-        - get_dyn_img: Create dynamic images from frames.
-    In case of a dataset that contains RGB frames,
-    the only mode that can be used is 'get_dyn_img'.
-    Alternatively, if the dataset contains videos,
-    the 'get_frames' mode should be used first to extract the frames
-    and then create the dynamic images.
+"""
+This script is used to extract frames from videos and create dynamic images from frames.
+The script supports two modes of operation: 'frames' and 'dynamic'.
+In 'frames' mode, the script extracts frames from videos at a specified frame rate.
+In 'dynamic' mode, the script creates dynamic images from frames.
+
+The script requires the following arguments:
+    -i, --input: Input directory.
+    -o, --output: Output directory.
+    -m, --mode: Mode of operation ('frames' or 'dynamic').
+    -d, --dataset: Dataset name (e.g., 'EPIC-KITCHENS', 'EGTEA').
+    -fps, --frame_rate: Frame rate for extracting frames (required for 'frames' mode).
+    -b, --block_console_msg: Block console messages.
+
+Example usage of the script:
+    python main.py -i path/to/input -o path/to/output -m frames -d EPIC-KITCHENS -fps 30
+    python main.py -i path/to/input -o path/to/output -m dynamic -d EPIC-KITCHENS
+
+Note: The script uses a configuration file (config.yaml) to load dataset-specific configurations.
 """
 
-from src.image_generators.dynamic_image_generator import DynamicImageGenerator
-from src.video_processing.video_processor import VideoProcessor
-from src.utils.execution_utils import ExecutionTimeHandler
-from src.utils.console_utils import ConsoleManager
-from src.utils.file_utils import FileManager
-
-import os
-import time
 import argparse
+import os
+
+import yaml
+
+from src.image_generators.dynamic_image_generator import DynamicImageGenerator
+from src.utils.console_utils import ConsoleManager
+from src.utils.execution_utils import ExecutionTimeHandler
+from src.utils.file_utils import FileManager
+from src.video_processing.video_processor import VideoProcessor
 
 
-def parse_args():
-    """
-    Parses command-line arguments.
-    Returns:
-        argparse.Namespace: A namespace object containing the parsed arguments.
-            - input (str): Input path directory containing the videos.
-            - print (bool): Flag to print messages.
-            - mode (str): Mode of operation. Options are 'get_frames' or 'get_dyn_img'.
-    """
+def load_config(config_path: str = "config.yaml") -> dict:
+    """Load configuration from a YAML file."""
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
 
-    parser = argparse.ArgumentParser()
+
+def parse_args() -> argparse.Namespace:
+    """Parses command-line arguments."""
+    parser = argparse.ArgumentParser(description="Video processing pipeline.")
+    parser.add_argument("-i", "--input", required=True, help="Input directory.")
+    parser.add_argument("-o", "--output", required=True, help="Output directory.")
     parser.add_argument(
-        "-i", "--input", help="Input path directory containing the videos"
+        "-m",
+        "--mode",
+        required=True,
+        choices=["frames", "dynamic"],
+        help="Mode of operation.",
     )
     parser.add_argument(
-        "-p", "--print", help="Flag to print messages", action="store_true"
+        "-d",
+        "--dataset",
+        required=True,
+        help="Dataset name (e.g., 'EPIC-KITCHENS', 'EGTEA').",
     )
-    parser.add_argument("-m", "--mode", help="Mode: [get_frames, get_dyn_img]")
+    parser.add_argument(
+        "-fps",
+        "--frame_rate",
+        type=int,
+        help="Frame rate for extracting frames (required for 'frames' mode).",
+    )
+    parser.add_argument(
+        "-b", "--block_console_msg", action="store_true", help="Block console messages."
+    )
     return parser.parse_args()
 
 
-def process_datasets(input_dir: str, mode: str):
-    extensions = {"get_frames": [".mp4", ".MP4"],"get_dyn_img": [".jpg", ".JPG", ".png", ".PNG"],}
+def process_frames(
+    input_dir: str, output_dir: str, frame_rate: int, extensions: list
+) -> None:
+    """Extracts frames from videos."""
+    videos = FileManager.media_path_crawler(input_dir, extensions)
+    video_processor = VideoProcessor()
 
-    if "EPIC-KITCHENS" in input_dir:
-        # TODO: Implementation for the EPIC-KITCHENS dataset
-        # Structure of the dataset:
-        pass
-
-    elif "EGTEA" in input_dir:
-        # TODO: Implementation for EGTEA dataset
-        # Structure of the dataset:
-        pass
-
-    elif "BON" in input_dir:
-        subdirs = ["Barcelona", "Nairobi", "Oxford"]
-
-    elif "Charades" in input_dir:
-        """
-        Due to the reason that RGB frames are provided in the CharadesEgo dataset there is no need for extracting them.
-        Thus, the only thing that needs to be done is to create the dynamic images.
-        """
-        subdirs = ["CharadesEgo_v1_rgb"]
-    else:
-        raise ValueError(f"Invalid input directory: {input_dir}")
-
-    for subdir in subdirs:
-        tmp_dir = "".join((input_dir, subdir))
-        videos = FileManager.get_videos(tmp_dir, extensions.get(mode, []))
-
-        if mode == "get_dyn_img" and "BON" in tmp_dir:
-            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets/Frames", "Datasets/Dynamic_Images").replace("/Frames", "")),videos,))
-
-        elif mode == "get_dyn_img" and "Charades" in tmp_dir:
-            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets", "Datasets/Dynamic_Images")),videos,))
-
-        elif mode == "get_frames":
-            output_dir = list(map(lambda video: os.path.dirname(video.replace("Datasets", "Datasets/Frames")),videos,))
-
-        [FileManager.create_multiple_dirs(directory) for directory in sorted(list(set(output_dir)))]
-
-        functions = {
-            "get_frames": VideoProcessor.extract_video_frames,
-            "get_dyn_img": DynamicImageGenerator.create_dynamic_images,
-        }
-        functions[mode](videos, output_dir)
+    for video_path in videos:
+        destination_dir = video_path.replace(input_dir, output_dir).split(".")[0]
+        FileManager.create_multiple_dirs(destination_dir)
+        video_processor.extract_video_frames(
+            [video_path], destination_dir, fps=frame_rate
+        )
 
 
-def main():
-    start_time = time.time()
+def process_dynamic_images(input_dir: str, output_dir: str, extensions: list) -> None:
+    """Creates dynamic images from frames."""
+    if not os.path.exists(input_dir) or not os.listdir(input_dir):
+        raise FileNotFoundError(
+            f"Input directory '{input_dir}' is empty or doesn't exist. "
+            "Run the script in 'frames' mode first."
+        )
+
+    dynamic_image_generator = DynamicImageGenerator()
+    dynamic_image_generator.create_dynamic_images(input_dir, output_dir)
+
+
+@ExecutionTimeHandler.timeit
+def main() -> None:
     args = parse_args()
-
-    if args.print:
+    if args.block_console_msg:
         ConsoleManager.block_print()
 
-    process_datasets(str(args.input), str(args.mode)) # Business logic is here
-    end_time = time.time()
-    ExecutionTimeHandler.calculate_execution_time(start_time, end_time)
+    config = load_config()
+
+    if args.dataset not in config["datasets"]:
+        raise ValueError(f"Unsupported dataset: {args.dataset}")
+    if args.mode not in config["datasets"][args.dataset]:
+        raise ValueError(f"Unsupported mode: {args.mode} for dataset {args.dataset}")
+
+    dataset_config = config["datasets"][args.dataset][args.mode]
+    input_dir = os.path.join(args.input, dataset_config["input_subdir"])
+    output_dir = os.path.join(args.output, dataset_config["output_subdir"])
+    extensions = dataset_config["supported_extensions"]
+
+    if args.mode == "frames":
+        if not args.frame_rate:
+            raise ValueError("Frame rate (--frame_rate) is required for 'frames' mode.")
+        process_frames(input_dir, output_dir, args.frame_rate, extensions)
+    elif args.mode == "dynamic":
+        process_dynamic_images(input_dir, output_dir, extensions)
 
 
 if __name__ == "__main__":

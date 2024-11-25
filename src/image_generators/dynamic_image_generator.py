@@ -2,19 +2,21 @@
 which is responsible for generating dynamic images from video frames.
 """
 
-from utils.image_utils import ImageManager
-from typing import Union
-
 import os
-import glob
+import random
+from collections import defaultdict
+
 import cv2
-import numpy as np
+
+from src.utils.file_utils import FileManager
+from src.utils.image_utils import ImageManager
 
 
 class DynamicImageGenerator:
     """Generates and handles dynamic images from frames."""
 
-    def create_dynamic_images(self, input_dir: str, output_dir: str) -> None:
+    @staticmethod
+    def create_dynamic_images(input_dir: str, output_dir: str) -> None:
         """
         Generates dynamic images from video frames and saves them to the specified output directory.
         Args:
@@ -23,25 +25,90 @@ class DynamicImageGenerator:
         Returns:
             None
         """
-        video_directories = [os.path.dirname(video) for video in input_dir]
-        video_directories = sorted(list(set(video_directories)))
-        output_dir = sorted(list(set(output_dir)))
+        frame_dirs = FileManager.media_path_crawler(input_dir)
+        frame_dirs = sorted(list(set(frame_dirs)))
 
-        frames = []
-        for video_dir, out_dir in zip(video_directories, output_dir):
-            file_pattern = os.path.join(video_dir, "**", "*.jpg")
-            video_files = glob.glob(file_pattern, recursive=True)
+        groupped_frame_dirs = defaultdict(list)
+        for frame_path in frame_dirs:
+            directory = os.path.dirname(frame_path)
+            groupped_frame_dirs[directory].append(frame_path)
+        groupped_frame_dirs = dict(groupped_frame_dirs)
 
-            frames.extend([cv2.imread(f) for f in video_files])
-            filename = os.path.basename(video_dir).split("/")[-1]
-            filename = f"{filename}.jpg"
+        for input_dir, frame_dirs in groupped_frame_dirs.items():
+            output_dir = input_dir.replace("frames", "dynamic_images")
+            FileManager.create_multiple_dirs(output_dir)
 
-            self.save_dynamic_image(frames, out_dir, filename)
+            sampled_frame_dirs = DynamicImageGenerator.stratified_sample_frames(
+                sorted(frame_dirs), max_samples=100
+            )
+
+            print(f"Processing directory: {input_dir} with {len(frame_dirs)} frames.")
+            print(
+                f"Sampled {len(sampled_frame_dirs)} frames from {len(frame_dirs)} available."
+            )
+
+            frames = [
+                cv2.imread(frame_path)
+                for frame_path in sampled_frame_dirs
+                if cv2.imread(frame_path) is not None
+            ]
+            if not frames:
+                print(f"No valid frames found in {input_dir}")
+                continue
+
+            output_filename = os.path.basename(input_dir) + ".jpg"
+            try:
+                DynamicImageGenerator.save_dynamic_image(
+                    frames, output_dir, output_filename
+                )
+                print(
+                    f"Dynamic image saved to {os.path.join(output_dir, output_filename)} \n"
+                )
+            except Exception as e:
+                print(f"Failed to create dynamic image for {input_dir}: {e}")
             frames.clear()
 
-    def save_dynamic_image(
-        self, frames: list, output_directory: str, filename: str
-    ) -> None:
+    @staticmethod
+    def stratified_sample_frames(frame_paths: list, max_samples: int = 100) -> list:
+        """
+        Randomly samples frames from the start, middle, and end of the video frames.
+        Args:
+            frame_paths (list): List of absolute paths to the frames.
+            max_samples (int): Maximum number of frames to sample.
+        Returns:
+            list: A stratified sampled subset of frame paths.
+        """
+        num_frames = len(frame_paths)
+        if num_frames <= max_samples:
+            return frame_paths
+
+        """
+        Split the frames into three segments
+        Start, middle, and end
+        Because the frames depcit a human action
+        """
+        third = num_frames // 3
+        start_frames = frame_paths[:third]
+        middle_frames = frame_paths[third : 2 * third]
+        end_frames = frame_paths[2 * third :]
+        samples_per_segment = (
+            max_samples // 3
+        )  # Calc. how many samples to get from each segment
+
+        try:
+            sampled_frames = (  # Randomly sample from each segment
+                random.sample(start_frames, min(len(start_frames), samples_per_segment))
+                + random.sample(
+                    middle_frames, min(len(middle_frames), samples_per_segment)
+                )
+                + random.sample(end_frames, min(len(end_frames), samples_per_segment))
+            )
+        except ValueError:
+            raise ValueError("Cannot sample from empty frame segments.")
+        return sampled_frames
+
+    @staticmethod
+    def save_dynamic_image(frames: list, output_directory: str, filename: str) -> None:
         """
         Generates and saves a dynamic image from a list of frames.
         Args:
@@ -59,25 +126,3 @@ class DynamicImageGenerator:
 
         if not os.path.exists(output_path):
             cv2.imwrite(output_path, dyn_image)
-
-    def show_dynamic_image(self, frames: Union[list, np.ndarray]) -> None:
-        """
-        Displays a dynamic image generated from a sequence of frames.
-        Args:
-            frames (Union[list, numpy.ndarray]):
-            A list or array of frames from which the dynamic image will be generated.
-            The function uses ImageUtils.get_dynamic_image to generate the dynamic image
-            and then displays it using OpenCV's imshow.
-            The display window will remain open until a key is pressed or
-            the window is closed manually.
-        """
-        dyn_image = ImageManager.get_dynamic_image(frames, normalized=True)
-
-        cv2.imshow("", dyn_image)
-        while True:
-            key = cv2.waitKey(1) & 0xFF
-            if key != 255:
-                break
-            if cv2.getWindowProperty("", cv2.WND_PROP_VISIBLE) < 1:
-                break
-        cv2.destroyAllWindows()

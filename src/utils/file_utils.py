@@ -7,8 +7,8 @@ class FileManager:
     """Handles file and directory-related operations."""
 
     @staticmethod
-    def get_videos(
-        root_dir: str, excluded_dirs: list[str] = [], extensions: list[str] = []
+    def media_path_crawler(
+        root_dir: str, excluded_dirs: list[str] = None, extensions: list[str] = None
     ) -> list[str]:
         """
         Recursively retrieves video file paths from a root directory, excluding specified subdirectories
@@ -17,13 +17,18 @@ class FileManager:
             root_dir (str): The root directory to search for video files.
             excluded_dirs (list[str], optional):
             A list of subdirectory names to exclude from the search.
-            Defaults to an empty list.
+            Defaults to ['.DS_Store'].
             extensions (list[str], optional):
-            A list of file extensions to filter the video files. Defaults to an empty list.
+            A list of file extensions to filter the video files. Defaults to ['.jpg', '.JPG', '.png', '.PNG'].
         Returns:
             list[str]: A list of absolute paths to the video files found.
         """
-        videos = []
+        if excluded_dirs is None:
+            excluded_dirs = [".DS_Store"]
+        if extensions is None:
+            extensions = [".jpg", ".JPG", ".png", ".PNG"]
+
+        media_paths = []
         for dir_name, subdir_list, file_list in os.walk(root_dir):
             for subdir in (f.name for f in os.scandir(dir_name) if f.is_dir()):
                 if subdir in excluded_dirs:
@@ -34,12 +39,9 @@ class FileManager:
             for fname in file_list:
                 if fname.endswith(tuple(extensions)):
                     file_path = os.path.abspath(os.path.join(dir_name, fname))
-                    videos.append(file_path)
-                else:
-                    file_path = os.path.abspath(os.path.join(dir_name, fname))
-                    videos.append(file_path)
-        print(f"\nNumber of videos found: {len(videos)}")
-        return videos
+                    media_paths.append(file_path)
+            print(f"\nNumber of videos found: {len(media_paths)}")
+        return media_paths
 
     @staticmethod
     def is_dir(directory: str) -> bool:
@@ -66,8 +68,7 @@ class FileManager:
     @staticmethod
     def create_multiple_dirs(path: str):
         """Create multiple directories recursively if they don't exist."""
-        if not os.path.exists(path):
-            os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
 
     @staticmethod
     def create_dir(directory: str):
