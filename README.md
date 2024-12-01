@@ -38,29 +38,7 @@ The repository is organized into several directories and files:
 
 ## Configuration
 
-The `config/config.yaml` file defines the structure for datasets. For example:
-
-```yaml
-datasets:
-  EPIC-KITCHENS:
-    frames:
-      input_subdir: "EPIC_KITCHENS/videos"
-      output_subdir: "frames"
-      supported_extensions: [".mp4", ".MP4"]
-    dynamic:
-      input_subdir: "EPIC_KITCHENS/frames"
-      output_subdir: "dynamic_images"
-      supported_extensions: [".jpg", ".JPG", ".png", ".PNG"]
-  EGTEA:
-    frames:
-      input_subdir: "EGTEA_GAZE_PLUS/Raw_Videos"
-      output_subdir: "frames"
-      supported_extensions: [".mp4", ".MP4"]
-    dynamic:
-      input_subdir: "EGTEA_GAZE_PLUS/frames"
-      output_subdir: "dynamic_images"
-      supported_extensions: [".jpg", ".JPG", ".png", ".PNG"]
-```
+The `config/config.yaml` file defines the structure for datasets. 
 
 ## How to Execute
 

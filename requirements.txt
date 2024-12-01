@@ -2,8 +2,10 @@ cfgv==3.4.0
 distlib==0.3.9
 filelock==3.16.1
 identify==2.6.1
+llvmlite==0.43.0
 nodeenv==1.9.1
-numpy==2.1.2
+numba==0.60.0
+numpy==2.0.2
 opencv-python==4.10.0.84
 platformdirs==4.3.6
 pre_commit==4.0.1

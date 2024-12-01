@@ -2,6 +2,7 @@
 which is responsible for generating dynamic images from video frames.
 """
 
+import sys
 import os
 import random
 from collections import defaultdict
@@ -16,7 +17,12 @@ class DynamicImageGenerator:
     """Generates and handles dynamic images from frames."""
 
     @staticmethod
-    def create_dynamic_images(input_dir: str, output_dir: str) -> None:
+    def create_dynamic_images(
+        input_dir: str,
+        output_dir: str,
+        max_samples: int,
+        file_extentions: list
+    ) -> None:
         """
         Generates dynamic images from video frames and saves them to the specified output directory.
         Args:
@@ -25,7 +31,7 @@ class DynamicImageGenerator:
         Returns:
             None
         """
-        frame_dirs = FileManager.media_path_crawler(input_dir)
+        frame_dirs = FileManager.media_path_crawler(input_dir,[],file_extentions)
         frame_dirs = sorted(list(set(frame_dirs)))
 
         groupped_frame_dirs = defaultdict(list)
@@ -39,7 +45,8 @@ class DynamicImageGenerator:
             FileManager.create_multiple_dirs(output_dir)
 
             sampled_frame_dirs = DynamicImageGenerator.stratified_sample_frames(
-                sorted(frame_dirs), max_samples=100
+                sorted(frame_dirs),
+                max_samples
             )
 
             print(f"Processing directory: {input_dir} with {len(frame_dirs)} frames.")

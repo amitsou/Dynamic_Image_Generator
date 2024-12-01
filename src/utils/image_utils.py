@@ -4,7 +4,7 @@ from typing import List
 
 import cv2
 import numpy as np
-
+from numba import njit
 
 class ImageManager:
     """Utility functions related to image manipulation."""
@@ -51,6 +51,8 @@ class ImageManager:
                 channel_frames.append(channel.reshape((*channel.shape[0:2], 1)))
         return [np.array(channel_frames) for channel_frames in frames]
 
+    #TODO: Test this function using numba
+    @njit
     @staticmethod
     def compute_dynamic_image(frames: np.ndarray) -> np.ndarray:
         """

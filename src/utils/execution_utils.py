@@ -2,7 +2,6 @@
 
 import time
 
-
 class ExecutionTimeHandler:
     """Handles execution time calculation."""
 
