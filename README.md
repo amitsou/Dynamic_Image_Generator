@@ -2,90 +2,55 @@
 
 ## Overview
 
-This repository provides tools for processing video datasets to generate dynamic images and extract frames. It supports two main modes of operation:
+Dynamic Image Generator is a Python-based tool for creating dynamic images and extracting frames from video datasets. This project simplifies the processing of video data and is compatible with datasets like `EPIC-KITCHENS` and `EGTEA Gaze +`.
 
-- **Frames Mode:** Extracts frames from videos at a specified frame rate.
-- **Dynamic Mode:** Creates dynamic images from video frames.
+## Features
 
-The script is designed for datasets such as `EPIC-KITCHENS` and `EGTEA`, but it is configurable for other datasets through a `config.yaml` file.
+- **Frame Extraction:** Extract frames from videos at a specified frame rate.
+- **Dynamic Image Generation:** Create dynamic images using pre-extracted frames.
 
-## Repository Structure
-
-The repository is organized into several directories and files:
-
-### Default Directories
-
-1. **`data/`**: Placeholder directory for raw or processed data.
-2. **`config/`**: Contains the `config.yaml` file for dataset-specific configurations.
-3. **`src/`**: Main source code directory with submodules:
-   - **`image_generators/`**: Implements the `DynamicImageGenerator` class.
-   - **`utils/`**: Provides utility functions for file handling, console management, and image processing.
-   - **`video_processing/`**: Includes functionality for extracting frames from videos.
-4. **`main.py`**: Entry point for executing the video processing pipeline.
-5. **`requirements.txt`**: Lists dependencies required to run the project.
-
-## Inputs and Outputs
-
-### Inputs
-
-- **Video Files**: Stored in the input directory. Supported formats are specified in **`config.yaml`.**
-- **Configuration File (`config.yaml`)**: Defines dataset-specific settings such as subdirectories and supported file types.
-
-### Outputs
-
-- **Frames Mode**: Extracted frames stored in the output directory named `frames`.
-- **Dynamic Mode**: Generated dynamic images saved in the output directory named `dynamic_images`.
-
-## Configuration
-
-The `config/config.yaml` file defines the structure for datasets. 
-
-## How to Execute
+## Quick Start
 
 ### Prerequisites
 
-1. Install Python dependencies:
-
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Ensure the `config.yaml` file is properly configured for the dataset.
+
+2. Ensure the input directories are organized as required. The input directories should follow the conventions and file structure used in datasets such as **EPIC-KITCHENS** and **EGTEA Gaze+**. Refer to these datasets for proper organization and directory naming standards.
 
 ### Usage
 
 Run the script using the following command:
 
 ```bash
-python main.py -i <input_directory> -o <output_directory> -m <mode> -d <dataset> [optional_args]
+python main.py -i <input_directory> -o <output_directory> -m <mode> -d <dataset>
 ```
 
 #### Arguments
+- `-i` / `--input`: Directory containing input videos or frames.
+- `-o` / `--output`: Directory for saving processed outputs.
+- `-m` / `--mode`: Choose `frames` for frame extraction or `dynamic` for dynamic image generation.
+- `-d` / `--dataset`: Specify the dataset (e.g., `EPIC-KITCHENS`, `EGTEA`).
 
-- `-i` / `--input`: Input directory.
-- `-o` / `--output`: Output directory.
-- `-m` / `--mode`: Mode of operation (`frames` or `dynamic`).
-- `-d` / `--dataset`: Dataset name (`EPIC-KITCHENS`, `EGTEA`, etc.).
-- `-fps` / `--frame_rate`: Frame rate for extracting frames (required for `frames` mode).
-- `-b` / `--block_console_msg`: Suppress console messages (optional).
-
-#### Examples
+### Examples
 
 1. Extract frames:
-
    ```bash
-   python main.py -i path/to/input -o path/to/output -m frames -d EPIC-KITCHENS -fps 30
+   python main.py -i path/to/videos -o path/to/output -m frames -d EPIC-KITCHENS
    ```
+
 2. Generate dynamic images:
-
    ```bash
-   python main.py -i path/to/input -o path/to/output -m dynamic -d EPIC-KITCHENS
+   python main.py -i path/to/frames -o path/to/output -m dynamic -d EGTEA
    ```
+
+### Sample Outputs
+
+- **Dynamic Image Sample:**
+  ![Dynamic Image Sample](images/dyanmic_image_sample.jpg)
 
 ## Notes
 
-- Ensure input directories are correctly structured as per `config.yaml`.
-- For `dynamic` mode, **ensure frames are pre-generated** using `frames` mode.
-
----
-
-For further details, explore the repository and consult the individual module documentation.
+- For `dynamic` mode, frames must be pre-extracted using the `frames` mode.
