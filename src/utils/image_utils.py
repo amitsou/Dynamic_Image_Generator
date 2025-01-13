@@ -52,7 +52,6 @@ class ImageManager:
         return [np.array(channel_frames) for channel_frames in frames]
 
     #TODO: Test this function using numba
-    @njit
     @staticmethod
     def compute_dynamic_image(frames: np.ndarray) -> np.ndarray:
         """
